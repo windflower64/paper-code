@@ -21,7 +21,7 @@ class FeatureTap(nn.Module):
             roi_grid=None,attention=None)
 
 
-class SCFDetector(nn.Module):
+class Detector(nn.Module):
     def __init__(self,config,checkpoint,calibration):
         super().__init__()
         cfg=YAMLConfig(str(config))

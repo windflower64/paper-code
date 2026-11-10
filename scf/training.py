@@ -1,4 +1,4 @@
-"""Portable SCF-Det stages; no dependency on the private research workspace."""
+"""Training stages for the RGB-thermal detector."""
 import copy
 import hashlib
 import json

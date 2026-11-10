@@ -1,4 +1,4 @@
-"""Train SCF-Det stages or run the complete serial training pipeline."""
+"""Train the RGB-thermal detector through the staged serial pipeline."""
 import argparse
 import copy
 import json

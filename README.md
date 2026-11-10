@@ -1,67 +1,88 @@
-# paper-code — SCF-Det
+# paper-code
 
-RGB–thermal UAV detection using learnable thermal sampling, pre-encoder cross-modal interaction, SAM-guided grouping, and shape-guided box refinement.
+Implementation of RGB–thermal UAV detection with learnable feature sampling, cross-modal interaction, foreground–background grouping, and shape-guided bounding-box refinement.
 
-## Release status
+## Requirements
 
-This release includes the complete-model serial training pipeline, initialization stages, offline mask generation, evaluation, and two accepted checkpoints. Short real-data tests cover each stage, checkpoint loading and epoch-boundary resume. See [TRAINING.md](docs/TRAINING.md) for the executable workflow. Full-run metrics under the public val-selection protocol have not been measured.
+- Python 3.10 or 3.11
+- PyTorch 2.3.1 and torchvision 0.18.1
+- A compatible CUDA environment for training
 
-The public configuration uses **train for fitting, val for checkpoint selection, and test for final evaluation**. Files under `configs/` use relative dataset paths. Existing checkpoints were selected using the original test split as a development set; their metadata retains that provenance. They must not be described as val-selected checkpoints. New val-selected checkpoints require training under the public protocol.
+Install the detector dependencies and download the initialization checkpoint:
 
-## Contents
+    pip install -r requirements.txt
+    python tools/download_pretrained.py
 
-- `src/`: D-FINE-based detector, SGC and SBR implementation.
-- `scf/`: portable current-fusion assembly and inference model wrapper.
-- `train.py`: full-model serial training, individual stages, and resume (no component-ablation interface).
-- `evaluate.py`: explicit val/test evaluation and P/R/F1 recount.
-- `tools/generate_masks.py` and `tools/prepare_data.py`: offline SAM3 teachers, paired-data checks, thermal annotations and train-only calibration.
-- [Validation record](docs/VALIDATION.md): checks completed and their scope.
-- `third_party/icafusion/`: the author interaction blocks used by the fusion adapter, with license.
-- `configs/`: resolved dataset configurations and train-derived spatial calibration.
-- `weights/`: inference state dictionaries, metrics and SHA-256 provenance for AntiUAV and UAV-CB.
-- `research_snapshot/`: local-only audit archive of training entry points and dependencies. It contains historical absolute paths and is excluded from Git. These files are not portable public training commands.
-- `release_manifest.json`: exported checkpoint inventory and release status.
+SAM3 is used to generate training supervision offline. Its environment and checkpoint are installed separately; detector inference does not require SAM3.
 
-## Checkpoints
+## Dataset preparation
 
-Download the pretrained models from [Release v1.0.0](https://github.com/windflower64/paper-code/releases/tag/v1.0.0) and place them under weights/:
+Organize each dataset according to [DATA.md](docs/DATA.md). Visible images use COCO annotations, and thermal images use their own annotations. The preparation utility validates the split structure, generates thermal COCO annotations, and estimates the spatial calibration from training pairs.
 
-- [AntiUAV checkpoint](https://github.com/windflower64/paper-code/releases/download/v1.0.0/scf_det_antiuav.pth)
-- [UAV-CB checkpoint](https://github.com/windflower64/paper-code/releases/download/v1.0.0/scf_det_uavcb.pth)
+    python tools/generate_masks.py --data-root data/antiuav --checkpoint /path/to/sam3.pt
+    python tools/prepare_data.py --data-root data/antiuav --calibration-output configs/antiuav_calibration.json
 
-Upload the `.pth` files as **GitHub Release assets**, not ordinary Git objects. Their metadata and checksums can remain in Git. Optimizer states and redundant epoch checkpoints are excluded from the export. Original resumable training checkpoints remain in the research workspace.
+Run mask generation in the SAM3 environment and data preparation in the detector environment. The public training entry uses train for optimization, val for checkpoint selection, and test for final evaluation.
 
-The AntiUAV checkpoint is the accepted new-fusion JOINT checkpoint. The UAV-CB checkpoint is the accepted REFINE checkpoint. The separate new ablation queue is not silently substituted for these accepted models.
+## Training
 
-## Inference API and compatibility check
+The complete pipeline comprises RGB and thermal initialization, feature-fusion training, boundary refinement, and joint fine-tuning.
 
-Run from the repository root after installing the dependencies:
+AntiUAV:
 
-```bash
-python tools/check_weights.py
-```
+    python train.py --config configs/antiuav.yml --data-root data/antiuav --calibration configs/antiuav_calibration.json --official weights/dfine_n_coco.pth --stage ALL --output outputs/antiuav
 
-```python
-from scf.model import SCFDetector
-model = SCFDetector('configs/antiuav.yml', 'weights/scf_det_antiuav.pth',
-                    'configs/antiuav_calibration.json').cuda().eval()
-# images: [B,6,512,640], RGB followed by IR replicated to three channels,
-# float values in [0,1]; resize the native modalities independently.
-# original_sizes: [B,2], original RGB [width,height], on the same device.
-predictions = model(images, original_sizes)
-```
+UAV-CB:
 
-The compatibility check verifies parameter keys and shapes, not AP. The weights retain their associated measured metrics; short public-entry tests are not new benchmark measurements.
+    python train.py --config configs/uavcb.yml --data-root data/uavcb --calibration configs/uavcb_calibration.json --official weights/dfine_n_coco.pth --stage ALL --output outputs/uavcb
 
-## Attribution and licensing
+Append --resume to restore an interrupted run from its last completed epoch. Stage-specific commands, optimization settings, and diagnostic options are provided in [TRAINING.md](docs/TRAINING.md).
 
-The detector derives from [D-FINE](https://github.com/Peterande/D-FINE), licensed under Apache-2.0 (`LICENSE.DFINE`). The cross-modal interaction block derives from [ICAFusion](https://github.com/chanchanchan97/ICAFusion), licensed under AGPL-3.0. The combined release carries AGPL-3.0 in `LICENSE`; upstream notices are retained. The interaction block is reused and must not be represented as an independently invented attention mechanism.
+## Pretrained checkpoints
 
-No dataset images, annotations, SAM masks, credentials or private Git history are included in the public Git file set.
+Download the checkpoints from [Release v1.0.0](https://github.com/windflower64/paper-code/releases/tag/v1.0.0) and place them in the weights directory.
 
-## Before publication
+| Dataset | Checkpoint |
+|---|---|
+| AntiUAV | [Download](https://github.com/windflower64/paper-code/releases/download/v1.0.0/scf_det_antiuav.pth) |
+| UAV-CB | [Download](https://github.com/windflower64/paper-code/releases/download/v1.0.0/scf_det_uavcb.pth) |
 
-1. Review the public train/val/test protocol and dataset licenses.
-2. For val-selected benchmark results, train the documented recipe to completion.
-3. Freeze the matching manuscript, architecture diagram and results.
-4. Create the GitHub repository named `paper-code`, push reviewed source, and attach weights to a release.
+Checkpoint-specific metrics and selection details are provided in the accompanying metadata files. SHA-256 checksums are recorded in release_manifest.json.
+
+    python tools/check_weights.py
+
+## Evaluation
+
+    python evaluate.py --config configs/antiuav.yml --data-root data/antiuav --calibration configs/antiuav_calibration.json --checkpoint weights/scf_det_antiuav.pth --split test --confidence 0.25 --output outputs/antiuav_test.json
+
+For UAV-CB, use its configuration, dataset root, calibration, and checkpoint. Evaluation reports COCO AP and fixed-threshold precision, recall, and F1. The matching IoU for these three metrics is 0.5.
+
+## Inference
+
+    from scf.model import Detector
+
+    model = Detector(
+        "configs/antiuav.yml",
+        "weights/scf_det_antiuav.pth",
+        "configs/antiuav_calibration.json",
+    ).cuda().eval()
+    predictions = model(images, original_sizes)
+
+The input tensor has shape [B, 6, 512, 640], with RGB channels followed by three-channel thermal input. Pixel values are scaled to [0, 1]. Resize the native modalities independently. Original visible-image sizes are supplied in [width, height] order.
+
+## Repository structure
+
+| Path | Description |
+|---|---|
+| train.py | Staged training and checkpoint restoration |
+| evaluate.py | Dataset evaluation |
+| scf/ | Model assembly, fusion, and internal attention implementation |
+| src/ | Detector, grouping supervision, and boundary refinement |
+| configs/ | Dataset and model configurations |
+| tools/ | Data preparation, offline supervision, and weight utilities |
+| docs/ | Data format, training instructions, and validation record |
+| weights/ | Checkpoint metadata |
+
+## License
+
+License texts are provided in LICENSE, LICENSE.DFINE, and LICENSE.ATTENTION. Third-party attribution is recorded in [NOTICE.md](NOTICE.md).

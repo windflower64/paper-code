@@ -7,7 +7,7 @@ import torch
 torch.set_num_threads(4)
 from scf import training as t
 from src.core import YAMLConfig
-from scf.model import SCFDetector
+from scf.model import Detector
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--config',required=True);p.add_argument('--checkpoint',required=True)
@@ -24,7 +24,7 @@ def main():
     else:
         d.update(img_folder=str(root/a.split/'visible/images'),ann_file=str(root/'annotations'/f'{a.split}.json'),
             infrared_folder=str(root/a.split/'thermal/images'),infrared_label_folder=str(root/a.split/'thermal/labels'))
-    model=SCFDetector(a.config,a.checkpoint,a.calibration).to(a.device)
+    model=Detector(a.config,a.checkpoint,a.calibration).to(a.device)
     stage=model.metadata.get('stage','JOINT')
     metrics,_=t.evaluate(cfg,model.base,model.refiner,model.s16,stage,a.device,a.confidence,a.max_batches)
     metrics.update(split=a.split,checkpoint=str(Path(a.checkpoint).resolve()),partial=bool(a.max_batches))

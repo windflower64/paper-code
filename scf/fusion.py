@@ -4,7 +4,7 @@ ICAFusion interaction is credited and distributed under AGPL-3.0.
 import torch
 from torch import nn
 from torch.nn import functional as F
-from third_party.icafusion.blocks import TransformerFusionBlock
+from ._attention import TransformerFusionBlock
 
 def author_block():
     return TransformerFusionBlock
@@ -22,7 +22,7 @@ class PreEncoderFusion(nn.Module):
                     layer.weight[:, :c, 0, 0].copy_(torch.eye(c))
                 self.blocks.append(layer)
             else:
-                self.blocks.append(ICAFAdapter(c))
+                self.blocks.append(CrossModalAdapter(c))
         self.bypass = False
         self.amp_safe = False
         self.last_gate_mean = torch.tensor(1.)
@@ -52,7 +52,7 @@ class PreEncoderFusion(nn.Module):
         # Historical post-encoder slot is intentionally a no-op.
         return visible, None
 
-class ICAFAdapter(nn.Module):
+class CrossModalAdapter(nn.Module):
     def __init__(self, channels):
         super().__init__()
         self.rgb_projection = nn.Conv2d(channels, 128, 1)

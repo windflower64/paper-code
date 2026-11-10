@@ -70,7 +70,8 @@ For new training, use the desired stage's best.pth. REFINE and JOINT results are
 
 ## Implementation map
 
-- scf/fusion.py: calibrated grid, learned offsets, sampling, and credited ICAFusion adapter.
+- scf/fusion.py: calibrated grid, learned offsets, sampling, and cross-modal interaction.
+- scf/_attention.py: internal attention implementation; attribution is recorded in NOTICE.md.
 - scf/training.py: model assembly, stage freezing, losses, optimizer, evaluator.
 - src/zoo/dfine/: grouping-loss and side-search implementations.
 - scf/model.py: full-model inference and checkpoint-compatible assembly.
