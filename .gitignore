@@ -1,8 +1,8 @@
 __pycache__/
 *.py[cod]
 .venv/
-data/
-outputs/
+/data/
+/outputs/
 *.pth
 *.pt
 *.onnx
@@ -11,4 +11,6 @@ outputs/
 .env
 .env.*
 !.env.example
-research_snapshot/
+/research_snapshot/
+*.before_*
+*.pre_*
