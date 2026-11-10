@@ -24,6 +24,11 @@ The public configuration uses **train for fitting, val for checkpoint selection,
 
 ## Checkpoints
 
+Download the pretrained models from [Release v1.0.0](https://github.com/windflower64/paper-code/releases/tag/v1.0.0) and place them under weights/:
+
+- [AntiUAV checkpoint](https://github.com/windflower64/paper-code/releases/download/v1.0.0/scf_det_antiuav.pth)
+- [UAV-CB checkpoint](https://github.com/windflower64/paper-code/releases/download/v1.0.0/scf_det_uavcb.pth)
+
 Upload the `.pth` files as **GitHub Release assets**, not ordinary Git objects. Their metadata and checksums can remain in Git. Optimizer states and redundant epoch checkpoints are excluded from the export. Original resumable training checkpoints remain in the research workspace.
 
 The AntiUAV checkpoint is the accepted new-fusion JOINT checkpoint. The UAV-CB checkpoint is the accepted REFINE checkpoint. The separate new ablation queue is not silently substituted for these accepted models.
