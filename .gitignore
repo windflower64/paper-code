@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.venv/
+data/
+outputs/
+*.pth
+*.pt
+*.onnx
+*.engine
+*.log
+.env
+.env.*
+!.env.example
+research_snapshot/

@@ -1,0 +1,328 @@
+{
+  "task": "detection",
+  "evaluator": {
+    "type": "CocoEvaluator",
+    "iou_types": [
+      "bbox"
+    ]
+  },
+  "num_classes": 1,
+  "remap_mscoco_category": false,
+  "train_dataloader": {
+    "type": "DataLoader",
+    "dataset": {
+      "type": "RGBTCocoDetection",
+      "img_folder": "data/antiuav/train/visible/images",
+      "ann_file": "data/antiuav/annotations/train.json",
+      "return_masks": false,
+      "transforms": {
+        "type": "Compose",
+        "ops": [
+          {
+            "type": "RandomHorizontalFlip"
+          },
+          {
+            "type": "Resize",
+            "size": [
+              512,
+              640
+            ]
+          },
+          {
+            "type": "SanitizeBoundingBoxes",
+            "min_size": 1
+          },
+          {
+            "type": "ConvertPILImage",
+            "dtype": "float32",
+            "scale": true
+          },
+          {
+            "type": "ConvertBoxes",
+            "fmt": "cxcywh",
+            "normalize": true
+          }
+        ],
+        "policy": null
+      },
+      "infrared_folder": "data/antiuav/train/thermal/images",
+      "infrared_label_folder": "data/antiuav/train/thermal/labels",
+      "sam_mask_root": "data/antiuav/sam_masks/train"
+    },
+    "shuffle": true,
+    "num_workers": 0,
+    "drop_last": false,
+    "collate_fn": {
+      "type": "BatchImageCollateFunction",
+      "base_size": 640,
+      "base_size_repeat": null,
+      "stop_epoch": 200,
+      "ema_restart_decay": 0.9999
+    },
+    "total_batch_size": 16,
+    "persistent_workers": false
+  },
+  "val_dataloader": {
+    "type": "DataLoader",
+    "dataset": {
+      "type": "RGBTCocoDetection",
+      "img_folder": "data/antiuav/val/visible/images",
+      "ann_file": "data/antiuav/annotations/val.json",
+      "return_masks": false,
+      "transforms": {
+        "type": "Compose",
+        "ops": [
+          {
+            "type": "Resize",
+            "size": [
+              512,
+              640
+            ]
+          },
+          {
+            "type": "ConvertPILImage",
+            "dtype": "float32",
+            "scale": true
+          }
+        ]
+      },
+      "infrared_folder": "data/antiuav/val/thermal/images",
+      "infrared_label_folder": "data/antiuav/val/thermal/labels",
+      "sam_mask_root": null
+    },
+    "shuffle": false,
+    "num_workers": 0,
+    "drop_last": false,
+    "collate_fn": {
+      "type": "BatchImageCollateFunction"
+    },
+    "total_batch_size": 16,
+    "persistent_workers": false
+  },
+  "print_freq": 100,
+  "output_dir": "outputs/antiuav",
+  "checkpoint_freq": 2,
+  "sync_bn": false,
+  "find_unused_parameters": false,
+  "use_amp": true,
+  "scaler": {
+    "type": "GradScaler",
+    "enabled": true,
+    "init_scale": 128.0
+  },
+  "use_ema": false,
+  "ema": {
+    "type": "ModelEMA",
+    "decay": 0.9999,
+    "warmups": 1000,
+    "start": 0
+  },
+  "use_wandb": false,
+  "project_name": "D-FINE",
+  "exp_name": "baseline",
+  "epochs": 20,
+  "clip_max_norm": 0.1,
+  "optimizer": {
+    "type": "AdamW",
+    "params": [
+      {
+        "params": "^mote_fusion.*$",
+        "lr": 0.0002
+      },
+      {
+        "params": "^sqer.*$",
+        "lr": 0.0002
+      },
+      {
+        "params": "^(?=.*backbone)(?!.*norm|bn).*$",
+        "lr": 0.0001
+      },
+      {
+        "params": "^(?=.*backbone)(?=.*norm|bn).*$",
+        "lr": 0.0001,
+        "weight_decay": 0.0
+      },
+      {
+        "params": "^(?=.*(?:encoder|decoder))(?=.*(?:norm|bn|bias)).*$",
+        "weight_decay": 0.0
+      }
+    ],
+    "lr": 0.0002,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "weight_decay": 0.0001,
+    "foreach": false
+  },
+  "lr_scheduler": {
+    "type": "MultiStepLR",
+    "milestones": [
+      500
+    ],
+    "gamma": 0.1
+  },
+  "lr_warmup_scheduler": {
+    "type": "LinearWarmup",
+    "warmup_duration": 500
+  },
+  "model": "DFINE",
+  "criterion": "DFINECriterion",
+  "postprocessor": "DFINEPostProcessor",
+  "use_focal_loss": true,
+  "eval_spatial_size": [
+    512,
+    640
+  ],
+  "DFINE": {
+    "backbone": "HGNetv2",
+    "encoder": "HybridEncoder",
+    "decoder": "DFINETransformer",
+    "rgbt_enabled": true,
+    "rgbt_thermal_dropout": 0.0,
+    "rgbt_thermal_intervention": "normal",
+    "rgbt_train_sdtec_only": false,
+    "rgbt_lock_norm_stats": true,
+    "rgbt_freeze_thermal_stream": true,
+    "rgbt_thermal_forward_chunk_size": 2,
+    "rgbt_checkpoint_decoder_training": false,
+    "rgbt_sd2_enabled": false,
+    "rgbt_sd2_variant": "token",
+    "rgbt_sd2_hidden_dim": 128,
+    "rgbt_sd2_num_levels": 2,
+    "rgbt_sd2_bottleneck_dim": 64,
+    "rgbt_sd2_num_tokens": 4,
+    "rgbt_sd2_num_heads": 4,
+    "rgbt_sd2_max_rms_ratio": 0.03,
+    "rgbt_sd2_thermal_contrastive": true,
+    "sgc_enabled": true,
+    "sgc_supervision": "sam",
+    "sgc_aux_weight": 10.0,
+    "sgc_decay_start": -1,
+    "sgc_decay_end": -1,
+    "rgbt_sd2_final_residual_scale": 0.5,
+    "sqer_enabled": true,
+    "sqer_bypass": true,
+    "sqer_evidence_only": true,
+    "sqer_topk": 64,
+    "sqer_roi_size": 16,
+    "sqer_roi_expand": 2.0,
+    "sqer_min_roi_width_px": 32.0,
+    "sqer_min_roi_height_px": 32.0,
+    "mote_enabled": true,
+    "mote_embed_dim": 64,
+    "mote_num_candidates": 4,
+    "mote_max_rms_ratio": 0.03,
+    "mote_final_residual_scale": 0.5,
+    "mote_objectness_loss_weight": 0.1,
+    "mote_layout_fix": true,
+    "sgc_multiscale": false
+  },
+  "HGNetv2": {
+    "pretrained": false,
+    "local_model_dir": "weight/hgnetv2/",
+    "name": "B0",
+    "return_idx": [
+      1,
+      2,
+      3
+    ],
+    "freeze_at": -1,
+    "freeze_norm": false,
+    "use_lab": true,
+    "pat_stage": -1,
+    "pat_sf_stage": 3,
+    "pat_sf_n_div": 4,
+    "pat_sf_variant": "global_query"
+  },
+  "HybridEncoder": {
+    "in_channels": [
+      512,
+      1024
+    ],
+    "feat_strides": [
+      16,
+      32
+    ],
+    "hidden_dim": 128,
+    "use_encoder_idx": [
+      1
+    ],
+    "num_encoder_layers": 1,
+    "nhead": 8,
+    "dim_feedforward": 512,
+    "dropout": 0.0,
+    "enc_act": "gelu",
+    "expansion": 0.34,
+    "depth_mult": 0.5,
+    "act": "silu"
+  },
+  "DFINETransformer": {
+    "feat_channels": [
+      128,
+      128
+    ],
+    "feat_strides": [
+      16,
+      32
+    ],
+    "hidden_dim": 128,
+    "num_levels": 2,
+    "num_layers": 3,
+    "eval_idx": -1,
+    "num_queries": 300,
+    "num_denoising": 100,
+    "label_noise_ratio": 0.5,
+    "box_noise_scale": 1.0,
+    "reg_max": 32,
+    "reg_scale": 4,
+    "layer_scale": 1,
+    "num_points": [
+      6,
+      6
+    ],
+    "cross_attn_method": "default",
+    "query_select_method": "default",
+    "dim_feedforward": 512,
+    "hrqs_enabled": false,
+    "hrqs_source_channels": 256,
+    "hrqs_anchor_size": 0.025,
+    "hrqs_num_queries": 50,
+    "sdtec_enabled": false
+  },
+  "DFINEPostProcessor": {
+    "num_top_queries": 300
+  },
+  "DFINECriterion": {
+    "weight_dict": {
+      "loss_vfl": 1,
+      "loss_bbox": 5,
+      "loss_giou": 2,
+      "loss_fgl": 0.15,
+      "loss_ddf": 1.5
+    },
+    "losses": [
+      "vfl",
+      "boxes",
+      "local"
+    ],
+    "alpha": 0.75,
+    "gamma": 2.0,
+    "reg_max": 32,
+    "matcher": {
+      "type": "HungarianMatcher",
+      "weight_dict": {
+        "cost_class": 2,
+        "cost_bbox": 5,
+        "cost_giou": 2
+      },
+      "alpha": 0.25,
+      "gamma": 2.0
+    },
+    "sqer_shape_weight": 0.0,
+    "sqer_supervision": "sam"
+  },
+  "gradient_accumulation_steps": 4,
+  "skip_model_profile": true,
+  "recovery_data_seed": 3407
+}

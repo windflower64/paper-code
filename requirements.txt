@@ -1,0 +1,15 @@
+# Install the matching torch/torchvision CUDA build for your platform first.
+torch==2.3.1
+torchvision==0.18.1
+numpy<2
+scipy
+PyYAML
+Pillow
+timm
+pycocotools
+faster-coco-eval>=1.6.6
+tensorboard
+loguru
+calflops
+# Keep transformers compatible with the chosen PyTorch runtime.
+transformers<4.50

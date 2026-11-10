@@ -1,0 +1,35 @@
+{
+  "dataset": "UAV-CB",
+  "stage": "REFINE",
+  "epoch": 0,
+  "model_selection_split": "original test used for development/selection",
+  "public_default_validation_split": "val",
+  "weights_follow_public_val_protocol": false,
+  "architecture": "adaptive affine-residual sampling plus ICAF pre-encoder fusion; original SBR",
+  "original_checkpoint_sha256": "9d2243f328132ee30ba1fdb2bc3dcd21207c7609518d42ea12ce85639f682022",
+  "validation": {
+    "coco_eval_bbox": [
+      0.5220443464910335,
+      0.907017746972747,
+      0.558356853585372,
+      0.4494594607364708,
+      0.4753691086746965,
+      0.7108088241191705,
+      0.5447447447447448,
+      0.5993993993993995,
+      0.6435435435435436,
+      0.5466666666666666,
+      0.6198312236286919,
+      0.7727272727272727
+    ],
+    "images": 333,
+    "precision": 0.7359413202933985,
+    "recall": 0.9039039039039038,
+    "f1": 0.8113207547169812,
+    "tp": 301,
+    "fp": 108,
+    "fn": 32,
+    "confidence_threshold": 0.25,
+    "pr_iou_threshold": 0.5
+  }
+}

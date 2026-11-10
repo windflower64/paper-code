@@ -1,0 +1,25 @@
+{
+  "repository": "paper-code",
+  "status": "public complete-model training/evaluation entries implemented; real-data smoke and epoch resume passed",
+  "weights": [
+    {
+      "dataset": "AntiUAV",
+      "weight": "weights/scf_det_antiuav.pth",
+      "sha256": "43a99f246bde4d9e8b1c89d3ddb4cb6f06f38941d06d0639f52876732f5a35f4",
+      "bytes": 34979424,
+      "AP": 54.767166572412776,
+      "AP50": 94.88215530525987
+    },
+    {
+      "dataset": "UAV-CB",
+      "weight": "weights/scf_det_uavcb.pth",
+      "sha256": "a0f507a988147affbae57b4e910001144d318716671a5c73c988d68773c01a33",
+      "bytes": 34719277,
+      "AP": 52.20443464910335,
+      "AP50": 90.7017746972747
+    }
+  ],
+  "archived_tool_count": 27,
+  "validation_default": "val",
+  "source_license": "D-FINE Apache-2.0; ICAFusion AGPL-3.0; combined distribution follows AGPL-3.0"
+}
