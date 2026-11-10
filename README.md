@@ -1,6 +1,8 @@
-# paper-code
+# Geometry-Calibrated Visible–Infrared Fusion and Shape-Guided Box Refinement for Small UAV Detection
 
-Implementation of RGB–thermal UAV detection with learnable feature sampling, cross-modal interaction, foreground–background grouping, and shape-guided bounding-box refinement.
+Code for **Geometry-Calibrated Visible–Infrared Fusion and Shape-Guided Box Refinement for Small UAV Detection**.
+
+The implementation combines geometry-calibrated visible–infrared feature fusion, foreground–background grouping, and shape-guided bounding-box refinement for small UAV detection.
 
 ## Requirements
 
